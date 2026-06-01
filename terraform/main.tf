@@ -10,19 +10,8 @@ terraform {
 }
 
 provider "aws" {
-  region                      = var.aws_region
-  access_key                  = "test"
-  secret_key                  = "test"
-  skip_credentials_validation = true
-  skip_metadata_api_check     = true
-  skip_requesting_account_id  = true
-
-  endpoints {
-    ec2          = "http://localhost:4566"
-    eks          = "http://localhost:4566"
-    iam          = "http://localhost:4566"
-    sts          = "http://localhost:4566"
-  }
+  region  = var.aws_region
+  profile = "terraform"
 }
 
 # --- VPC ---
@@ -33,7 +22,7 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = {
-    Name = "${var.cluster_name}-vpc"
+    Name = "${var.project_name}-vpc"
   }
 }
 
@@ -52,8 +41,7 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name = "${var.cluster_name}-public-${count.index + 1}"
-    "kubernetes.io/role/elb" = "1"
+    Name = "${var.project_name}-public-${count.index + 1}"
   }
 }
 
@@ -63,7 +51,7 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name = "${var.cluster_name}-igw"
+    Name = "${var.project_name}-igw"
   }
 }
 
@@ -78,7 +66,7 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name = "${var.cluster_name}-public-rt"
+    Name = "${var.project_name}-public-rt"
   }
 }
 

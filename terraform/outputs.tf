@@ -8,17 +8,17 @@ output "subnet_ids" {
   value       = aws_subnet.public[*].id
 }
 
-output "eks_cluster_name" {
-  description = "The name of the EKS cluster"
-  value       = aws_eks_cluster.this.name
+output "ec2_public_ip" {
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.this.public_ip
 }
 
-output "eks_cluster_endpoint" {
-  description = "The endpoint for the EKS cluster API server"
-  value       = aws_eks_cluster.this.endpoint
+output "ec2_private_ip" {
+  description = "Private IP of the EC2 instance"
+  value       = aws_instance.this.private_ip
 }
 
-output "eks_cluster_certificate_authority" {
-  description = "Base64 encoded certificate data for the EKS cluster"
-  value       = aws_eks_cluster.this.certificate_authority[0].data
+output "ssh_command" {
+  description = "SSH command to connect to EC2"
+  value       = "ssh ubuntu@${aws_instance.this.public_ip}"
 }

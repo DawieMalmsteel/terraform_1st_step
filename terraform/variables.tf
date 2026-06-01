@@ -1,7 +1,7 @@
-variable "cluster_name" {
-  description = "Name of the EKS cluster"
+variable "project_name" {
+  description = "Name of the project (used for resource naming)"
   type        = string
-  default     = "my-eks-cluster"
+  default     = "my-aws-project"
 }
 
 variable "vpc_cidr" {
@@ -16,20 +16,14 @@ variable "subnet_cidrs" {
   default     = ["10.0.1.0/24", "10.0.2.0/24"]
 }
 
-variable "node_count" {
-  description = "Number of worker nodes in the EKS node group"
-  type        = number
-  default     = 2
-}
-
-variable "node_instance_type" {
-  description = "EC2 instance type for worker nodes"
+variable "instance_type" {
+  description = "EC2 instance type"
   type        = string
-  default     = "t3.medium"
+  default     = "t3.micro"
 }
 
 variable "aws_region" {
-  description = "AWS region (used for AZ suffixes)"
+  description = "AWS region"
   type        = string
   default     = "us-east-1"
 }
