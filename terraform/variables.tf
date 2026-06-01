@@ -1,7 +1,7 @@
 variable "project_name" {
   description = "Name of the project (used for resource naming)"
   type        = string
-  default     = "my-aws-project"
+  default     = "dinpd-aws-project"
 }
 
 variable "vpc_cidr" {
@@ -16,6 +16,12 @@ variable "subnet_cidrs" {
   default     = ["10.0.1.0/24", "10.0.2.0/24"]
 }
 
+variable "private_subnet_cidrs" {
+  description = "CIDR blocks for the private subnets (2 AZs)"
+  type        = list(string)
+  default     = ["10.0.10.0/24", "10.0.11.0/24"]
+}
+
 variable "instance_type" {
   description = "EC2 instance type"
   type        = string
@@ -25,5 +31,5 @@ variable "instance_type" {
 variable "aws_region" {
   description = "AWS region"
   type        = string
-  default     = "us-east-1"
+  default     = "ap-southeast-1"
 }
