@@ -1,0 +1,120 @@
+# ============================================================
+# Docker Compose - 2 kiểu mạng: Bridge vs Macvlan
+# ============================================================
+#
+# 1. BRIDGE (default) - Giống VPC
+#    - Containers giao tiếp qua bridge interface
+#    - Port mapping để truy cập từ host
+#    - Isolated nhưng có thể kết nối với nhau
+#
+# 2. MACVLAN - Giống dedicated ENI trong AWS
+#    - Container có MAC address riêng
+#    - Appears như physical device trên network
+#    - Không cần port mapping
+#    - Container có IP riêng trên physical network
+#
+# Bảng so sánh:
+# ┌──────────────────┬─────────────────────┬─────────────────────┐
+# │ Feature          │ Bridge              │ Macvlan             │
+# ├──────────────────┼─────────────────────┼─────────────────────┤
+# │ IP assignment    │ Docker manages      │ Static/DHCP on LAN  │
+# │ Port mapping     │ Required            │ Not needed          │
+# │ Performance      │ Good                │ Better (no NAT)     │
+# │ Isolation        │ Strong              │ Less (same LAN)     │
+# │ Use case         │ Development         │ Production/legacy   │
+# │ AWS equivalent   │ VPC + Subnets       │ Dedicated ENI       │
+# └──────────────────┴─────────────────────┴─────────────────────┘
+
+services:
+  # ============================================================
+  # BRIDGE NETWORK - Default Docker networking
+  # ============================================================
+
+  nginx-bridge:
+    image: nginx:alpine
+    container_name: nginx-bridge
+    ports:
+      - "8080:80"        # ← Port mapping cần thiết
+    networks:
+      bridge-network:
+        ipv4_address: 172.23.0.10
+    restart: unless-stopped
+
+  node-bridge:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: node-bridge
+    ports:
+      - "3000:3000"      # ← Port mapping cần thiết
+    networks:
+      bridge-network:
+        ipv4_address: 172.23.0.20
+    environment:
+      - NETWORK_TYPE=bridge
+    restart: unless-stopped
+
+  # ============================================================
+  # MACVLAN NETWORK - Dedicated MAC address
+  # ============================================================
+
+  nginx-macvlan:
+    image: nginx:alpine
+    container_name: nginx-macvlan
+    # KHÔNG có ports mapping! IP riêng trên LAN
+    networks:
+      macvlan-network:
+        ipv4_address: 192.168.11.200
+    restart: unless-stopped
+
+  node-macvlan:
+    build:
+      context: ./app
+      dockerfile: Dockerfile
+    container_name: node-macvlan
+    # KHÔNG có ports mapping! IP riêng trên LAN
+    networks:
+      macvlan-network:
+        ipv4_address: 192.168.11.201
+    environment:
+      - NETWORK_TYPE=macvlan
+    restart: unless-stopped
+
+  # ============================================================
+  # TOOLS - Để test connectivity
+  # ============================================================
+
+  curl-tools:
+    image: curlimages/curl:latest
+    container_name: curl-tools
+    networks:
+      bridge-network:
+        ipv4_address: 172.23.0.30
+    entrypoint: ["sleep", "infinity"]
+    restart: unless-stopped
+
+# ============================================================
+# NETWORKS
+# ============================================================
+networks:
+  # Bridge Network - Default Docker networking
+  # Giống VPC: containers giao tiếp qua bridge, cần port mapping
+  bridge-network:
+    name: bridge-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.23.0.0/16
+
+  # Macvlan Network - Dedicated MAC address
+  # Giống dedicated ENI trong AWS: container có IP riêng trên LAN
+  # KHÔNG cần port mapping, container directly accessible từ LAN
+  macvlan-network:
+    name: macvlan-network
+    driver: macvlan
+    driver_opts:
+      parent: wlan0  # ← Interface WiFi đang dùng
+    ipam:
+      config:
+        - subnet: 192.168.10.0/23
+          gateway: 192.168.10.1
